@@ -4,22 +4,24 @@
 
 | 模块 | 文件 | 中断源 | 一句话 |
 |---|---|---|---|
-| 1ms 时基 | `tick_irq.c/.h` | TIM6 更新中断 | 毫秒计数 + 顺序调用钩子，按键/矩阵共用 |
+| 1ms 时基 | `tick_irq.c/.h` | TIM6 更新中断 | 毫秒计数 + 跑软定时任务 + 旧钩子 |
+| 软定时器 | `soft_timer.c/.h` | 挂在 TIM6 的 1ms 中断上 | 多个任务按各自周期跑（按键/矩阵/采样） |
 | 蜂鸣器 | `buzzer_irq.c/.h` | TIM2 更新中断 | 无源：每 185µs 翻转 PB10 出方波；有源：1ms 计时 |
-| 独立按键 | `key_irq.c/.h` | EXTI0~EXTI3 | 短按 / 长按 / 双击 / 连发，1ms 时基消抖 |
-| 4×4 矩阵键盘 | `matrix_irq.c/.h` | TIM6 的 1ms 钩子 | 每 1ms 扫一行，4ms 扫完一轮 |
+| 独立按键 | `key_irq.c/.h` | EXTI0~EXTI3 | 短按 / 长按 / 双击 / 连发，1ms 软定时器消抖 |
+| 4×4 矩阵键盘 | `matrix_irq.c/.h` | 1ms 软定时器 | 每 1ms 扫一行，4ms 扫完一轮 |
 
 ## 初始化顺序
 
 ```c
-TICK_Init();        /* 先配好 TIM6 时基，但还不启动 */
-KeyIRQ_Init();      /* 配 EXTI，并把按键状态机挂到 1ms 钩子 */
-MatrixIRQ_Init();   /* 配矩阵行列，并把扫描函数挂到 1ms 钩子 */
-/* ... 其它模块初始化 ... */
-TICK_Start();       /* 钩子都挂好了，最后启动 1ms 心跳 */
+SOFTTIMER_Init();   /* 先清空软定时器表 */
+TICK_Init();        /* 配好 TIM6 时基，但还不启动 */
+KeyIRQ_Init();      /* 配 EXTI，并注册 1ms 软定时任务 */
+MatrixIRQ_Init();   /* 配矩阵行列，并注册 1ms 软定时任务 */
+/* ... 其它模块初始化、注册采样节拍 ... */
+TICK_Start();       /* 任务都注册好了，最后启动 1ms 心跳 */
 ```
 
-顺序不能反：`TICK_Start()` 之前要把钩子挂完，否则前几毫秒的按键/扫描会漏掉。
+顺序不能反：`TICK_Start()` 之前要把软定时任务都注册完，否则前几毫秒的按键/扫描会漏掉。
 
 ---
 
@@ -36,13 +38,55 @@ TICK_Start();       /* 钩子都挂好了，最后启动 1ms 心跳 */
 | `void TICK_Init(void)` | 72MHz/(71+1)=1MHz，ARR=999 → 1ms 中断；先不启动 |
 | `void TICK_Start(void)` | 启动心跳 |
 | `uint32_t TICK_GetMs(void)` | 开机以来的毫秒数 |
-| `uint8_t TICK_AddHook(void (*fn)(void))` | 挂一个每 1ms 调用的函数（最多 4 个） |
+| `uint8_t TICK_AddHook(void (*fn)(void))` | 旧接口：挂一个每 1ms 调用的函数（最多 4 个），保留兼容 |
 
 注意：
 
-- 钩子在中断里执行，必须短小（读几个 IO、跑个小状态机），**不能 delay、printf、等标志位**。
+- 钩子和软定时任务都在中断里执行，必须短小（读几个 IO、跑个小状态机），**不能 delay、printf、等标志位**。
 - `TICK_GetMs()` 的 32 位计数会溢出，但用 `(now - t) >= n` 这种减法比较，溢出后仍然正确。
 - 优先级 3，低于数码管（TIM4）、蜂鸣器（TIM2）和按键 EXTI。
+
+---
+
+## soft_timer —— 软定时器（多个任务共用一个 1ms 中断）
+
+一个 TIM6 中断，按各自的周期跑多个任务，省定时器、省中断：
+
+```c
+static soft_timer_t s_timer;
+
+static void my_task(void)   /* 中断里执行，必须短 */
+{
+    ...
+}
+
+SOFTTIMER_Add(&s_timer, my_task, 10);   /* 每 10ms 跑一次 */
+```
+
+| 函数 | 说明 |
+|---|---|
+| `void SOFTTIMER_Init(void)` | 清空表（上电一次，必须在注册之前） |
+| `int8_t SOFTTIMER_Add(soft_timer_t *t, void (*fn)(void), uint16_t ms)` | 注册并启动；-1 = 表满/参数错 |
+| `void SOFTTIMER_Start(soft_timer_t *t)` | 重新开始计时 |
+| `void SOFTTIMER_Stop(soft_timer_t *t)` | 暂停 |
+| `void SOFTTIMER_SetPeriod(soft_timer_t *t, uint16_t ms)` | 改周期并重新计时 |
+| `uint8_t SOFTTIMER_IsRunning(const soft_timer_t *t)` | 1 = 在计时 |
+| `void SOFTTIMER_Tick(void)` | 由 `TIM6_IRQHandler` 调用，应用不用管 |
+
+要点：
+
+- 最多 `SOFT_TIMER_MAX`（8）个任务，结构体由使用者定义，模块只存指针，不用动态内存；
+- 周期 1~65535ms，1ms 分辨率；
+- 回调里**只置标志**，耗时的事（DHT11 读 5ms、刷 OLED）留在主循环；
+- 注册必须在 `TICK_Start()` 之前。
+
+工程里已经这么用了：
+
+| 任务 | 周期 | 说明 |
+|---|---|---|
+| 按键状态机 | 1ms | `key_irq.c` 里注册 |
+| 矩阵键盘扫描 | 1ms | `matrix_irq.c` 里注册 |
+| 采样节拍 | 1000ms | `main.h` 里注册，回调只置 `s_sample_due`，主循环里读传感器 |
 
 ---
 
@@ -89,7 +133,7 @@ TICK_Start();       /* 钩子都挂好了，最后启动 1ms 心跳 */
 
 | 函数 | 说明 |
 |---|---|
-| `void KeyIRQ_Init(void)` | PE0~PE3 上拉输入 + 4 条 EXTI（双边沿）+ NVIC，并挂 1ms 钩子 |
+| `void KeyIRQ_Init(void)` | PE0~PE3 上拉输入 + 4 条 EXTI（双边沿）+ NVIC，并注册 1ms 软定时任务 |
 | `uint8_t KeyIRQ_Scan(void)` | 从队列取一个事件；没有返回 `KEY_NONE` |
 
 ### 示例
@@ -166,7 +210,7 @@ while (1)
 
 | 函数 | 说明 |
 |---|---|
-| `void MatrixIRQ_Init(void)` | 配 4 行输出、4 列输入，先选中第 0 行，并挂 1ms 钩子 |
+| `void MatrixIRQ_Init(void)` | 配 4 行输出、4 列输入，先选中第 0 行，并注册 1ms 软定时任务 |
 | `uint8_t MatrixIRQ_Scan(void)` | 取一个键值；没有返回 0。按住不放只返回一次 |
 
 ### 示例

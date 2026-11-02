@@ -2,11 +2,12 @@
  * @file    tick_irq.c
  * @brief   1ms 时基：TIM6 更新中断，顺序调用挂上来的钩子
  *
- * 中断里只做两件事：毫秒计数 + 依次调用钩子。钩子必须短（读几个 IO、跑个小状态机），
- * 不能在里面 delay、printf、等标志位。
+ * 中断里只做三件事：毫秒计数 + 跑软定时任务 + 依次调用旧钩子。
+ * 软定时任务和钩子都必须短（读几个 IO、跑个小状态机），不能 delay、printf、等标志位。
  */
 
 #include "tick_irq.h"
+#include "soft_timer.h"
 
 static volatile uint32_t s_ms = 0;                              /* 毫秒计数 */
 static void (*s_hooks[TICK_MAX_HOOKS])(void);                    /* 1ms 钩子表 */
@@ -94,6 +95,9 @@ void TIM6_IRQHandler(void)
     TIM_ClearITPendingBit(TICK_TIM, TIM_IT_Update);
 
     s_ms++;
+
+    /* 软定时任务：按键扫描、矩阵扫描、采样节拍……都挂在这里按周期跑 */
+    SOFTTIMER_Tick();
 
     n = s_hook_count; /* 先取快照，防止钩子里再加钩子时越界 */
     for (i = 0; i < n; i++)

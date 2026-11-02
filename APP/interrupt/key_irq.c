@@ -16,8 +16,10 @@
 
 #include "key_irq.h"
 #include "tick_irq.h"
+#include "soft_timer.h"
 
 #define KEY_NUM        4
+#define KEY_SCAN_MS    1u  /* 按键状态机周期：1ms 扫一次 */
 #define KEY_QUEUE_SIZE 8
 
 static const uint16_t s_key_pins[KEY_NUM] = {
@@ -35,6 +37,8 @@ static volatile uint32_t s_repeat_ms[KEY_NUM];   /* 下一次连发的时间 */
 static volatile uint8_t  s_long_sent[KEY_NUM];   /* 1 = 这次长按已经报过 */
 static volatile uint8_t  s_second[KEY_NUM];      /* 1 = 这次按下是双击的第二下 */
 static volatile uint8_t  s_wait_single[KEY_NUM]; /* 1 = 松开后正在等双击窗口 */
+
+static soft_timer_t s_key_timer;                 /* 软定时器：每 1ms 跑一次状态机 */
 
 static volatile uint8_t s_queue[KEY_QUEUE_SIZE]; /* 事件队列，中断写、主循环读 */
 static volatile uint8_t s_head = 0;
@@ -206,7 +210,7 @@ void EXTI3_IRQHandler(void)
 
 /**
  * @brief  初始化按键中断
- * @note   先调 TICK_Init()，本函数会通过 TICK_AddHook() 挂上 1ms 钩子；
+ * @note   先调 SOFTTIMER_Init()/TICK_Init()，本函数会注册 1ms 的软定时任务；
  *         最后在主程序里调 TICK_Start() 启动时基
  */
 void KeyIRQ_Init(void)
@@ -258,7 +262,7 @@ void KeyIRQ_Init(void)
         NVIC_Init(&nvic);
     }
 
-    TICK_AddHook(key_irq_tick);
+    SOFTTIMER_Add(&s_key_timer, key_irq_tick, KEY_SCAN_MS);
 }
 
 /**

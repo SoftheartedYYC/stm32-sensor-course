@@ -12,6 +12,15 @@ int main(void)
 
     while (1)
     {
-        /* 在这里写你的功能 */
+        /* 每秒一次的采样节拍（由 main.h 里的软定时器置标志） */
+        if (s_sample_due != 0)
+        {
+            s_sample_due = 0;
+
+            /* 在这里读传感器 / 刷新显示：
+             *   dht11_read(&humi, &temp);
+             *   oled_draw_all(...);
+             * 注意别在 TIM6 中断里做，这里是主循环，可以慢，也可以 delay */
+        }
     }
 }

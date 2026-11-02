@@ -12,8 +12,12 @@
 
 #include "matrix_irq.h"
 #include "tick_irq.h"
+#include "soft_timer.h"
 
 #define MKEY_QUEUE_SIZE 8
+#define MATRIX_SCAN_MS  1u  /* 每 1ms 扫一行，4ms 一轮（改大就要重新算稳定时间） */
+
+static soft_timer_t s_matrix_timer; /* 软定时器：每 1ms 扫一行 */
 
 static uint8_t s_row;         /* 当前正在驱动的行：0~3 */
 static uint8_t s_cycle_key;   /* 本轮 4 行里扫到的键值 */
@@ -71,7 +75,7 @@ static void matrix_sample(uint8_t key)
 }
 
 /**
- * @brief  1ms 钩子：读上一行、驱动下一行，每 4ms 判决一次
+ * @brief  1ms 软定时任务：读上一行、驱动下一行，每 4ms 判决一次
  */
 static void matrix_irq_tick(void)
 {
@@ -145,7 +149,7 @@ void MatrixIRQ_Init(void)
     s_head = 0;
     s_tail = 0;
 
-    TICK_AddHook(matrix_irq_tick);
+    SOFTTIMER_Add(&s_matrix_timer, matrix_irq_tick, MATRIX_SCAN_MS);
 }
 
 /**

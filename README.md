@@ -83,7 +83,7 @@ int main(void)
 | TIM4 | 数码管扫描 | 别在别处初始化 TIM4；`TIM4_IRQHandler` 在 `smg.c` |
 | TIM2 | 中断版蜂鸣器 | 无源：每 185µs 更新中断翻转 PB10；有源：1ms 一拍只数发声时长；`TIM2_IRQHandler` 在 `buzzer_irq.c` |
 | TIM1 | 超声波输入捕获 | CH1（PA8）；`TIM1_CC_IRQHandler` 在 `hcsr04.c` |
-| TIM6 | 1ms 时基 | 按键消抖、矩阵扫描共用；`TIM6_IRQHandler` 在 `tick_irq.c` |
+| TIM6 | 1ms 时基 + 软定时器 | 按键/矩阵/采样按各自周期跑；`TIM6_IRQHandler` 在 `tick_irq.c`，任务表在 `soft_timer.c` |
 | TIM7 | 步进电机脉冲 | 每半个周期更新中断翻转 PE13；`TIM7_IRQHandler` 在 `stepper_app.c` |
 | EXTI0~3 | 独立按键 | PE0~PE3 双边沿；`EXTI0~3_IRQHandler` 在 `key_irq.c` |
 | PB10 | 蜂鸣器 | 类型在 `buzzer_cfg.h` 选；有源只给电平，无源才发方波 |

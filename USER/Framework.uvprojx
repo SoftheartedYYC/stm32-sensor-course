@@ -465,6 +465,11 @@
               <FilePath>..\APP\interrupt\tick_irq.c</FilePath>
             </File>
             <File>
+              <FileName>soft_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\interrupt\soft_timer.c</FilePath>
+            </File>
+            <File>
               <FileName>key_irq.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\interrupt\key_irq.c</FilePath>

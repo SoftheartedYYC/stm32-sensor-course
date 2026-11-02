@@ -5,12 +5,13 @@
  * 为什么要有这个模块：
  *   按键消抖、长按连发、矩阵键盘扫描都需要一个稳定的 1ms 节拍。
  *   如果每个模块各开一个定时器，工程里会到处都是定时器中断；
- *   这里用空闲的 TIM6 统一产生 1ms 中断，别的模块通过 TICK_AddHook()
- *   挂一个"每毫秒执行一次"的函数，共用同一个时基。
+ *   这里用空闲的 TIM6 统一产生 1ms 中断：
+ *     - 软定时器（soft_timer.h）挂在里面，按各自周期跑（按键/矩阵/采样都用它）；
+ *     - 旧的 TICK_AddHook() 钩子也保留，兼容"每 1ms 跑一次"的写法。
  *
  * 用法（顺序不能反）：
  *   TICK_Init();        // 配 TIM6，但先不启动
- *   KeyIRQ_Init();      // 里面 TICK_AddHook(按键状态机)
+ *   KeyIRQ_Init();      // 里面 SOFTTIMER_Add(按键状态机, 1ms)
  *   MatrixIRQ_Init();   // 里面 TICK_AddHook(矩阵扫描)
  *   TICK_Start();       // 钩子都挂好了，再启动 1ms 心跳
  */

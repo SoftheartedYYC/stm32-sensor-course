@@ -23,6 +23,7 @@
 #include "led_app.h"
 #include "photo_app.h"
 #include "tick_irq.h"
+#include "soft_timer.h"
 #include "key_irq.h"
 #include "matrix_irq.h"
 #include "buzzer_irq.h"
@@ -73,12 +74,29 @@
 #define LIGHT_LEVEL_RAW_MAX 4095
 
 /* ------------------------------------------------------------------
+ * 周期任务：每秒采样一次
+ *   软定时器的回调是在 TIM6 中断里跑的，所以这里只置一个标志；
+ *   真正的采样（读 DHT11/DS18B20、刷新 OLED）放在主循环里做——
+ *   DHT11 读一次要 5ms 左右，绝不能塞进 1ms 中断。
+ * ------------------------------------------------------------------ */
+#define SAMPLE_PERIOD_MS 1000u
+
+static volatile uint8_t s_sample_due = 0;
+static soft_timer_t s_sample_timer;
+
+static void Sample_Timer_Cb(void)
+{
+    s_sample_due = 1;
+}
+
+/* ------------------------------------------------------------------
  * 板级初始化：按顺序把每个模块初始化好，main.c 只需调这一个函数
  *   顺序有讲究：delay_init() 必须最先（别的驱动可能用 delay），
  *   TICK_Start() 必须最后（前面模块初始化时可能挂 1ms 钩子）。
  * ------------------------------------------------------------------ */
 static void Board_Init(void)
 {
+    SOFTTIMER_Init(); /* 先清空软定时器表，各模块的 init 里才能注册 */
     delay_init();     /* SysTick 延时，必须最先 */
     IIC_Init();       /* PB6/PB7 软件 I2C 总线 */
     SMG_Init();       /* 数码管 + TIM4 扫描 */
@@ -104,7 +122,10 @@ static void Board_Init(void)
     (void)BH1750_Init(); /* PB6/PB7 照度传感器（没接也没关系，返回 0） */
 #endif
 
-    TICK_Start();     /* 1ms 时基最后启动 */
+    /* 每秒一次采样节拍：回调只置标志，主循环里再干活 */
+    SOFTTIMER_Add(&s_sample_timer, Sample_Timer_Cb, SAMPLE_PERIOD_MS);
+
+    TICK_Start();     /* 1ms 时基最后启动（所有软定时任务都要在它之前注册） */
 }
 
 /* ------------------------------------------------------------------
