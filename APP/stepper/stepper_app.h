@@ -57,9 +57,11 @@
 #define STEPPER_STEP_ANGLE STEPPER_ANGLE_18
 
 /* 驱动器细分：填 Emm42 屏幕上"细分"那个值，1 = 整步（不分细分）。
- *   屏幕上是 16，这里就填 16——否则 stepper_move_deg(360) 只会转 360/16 度。
+ *   本工程用的 Emm42 屏幕细分 = 16 -> 1.8° 电机一圈 = 200 × 16 = 3200 个脉冲。
+ *   这里不填 16 的话，stepper_move_deg(360) 只发 200 个脉冲，
+ *   电机只转 200/(200×16) 圈 = 22.5°，看起来就是"每次只动一点点"。
  *   细分越大，同样转速需要越高的脉冲频率（细分 × 步频 ≲ 100kHz）。 */
-#define STEPPER_MICROSTEP  1u
+#define STEPPER_MICROSTEP  16u
 
 #if (STEPPER_STEP_ANGLE == STEPPER_ANGLE_09)
 #define STEPPER_STEPS_PER_REV_FULL 400u   /* 0.9°：360 / 0.9 */
