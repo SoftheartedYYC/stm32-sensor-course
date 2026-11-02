@@ -47,42 +47,54 @@
 #define STEPPER_TIM_RCC          RCC_APB1Periph_TIM7
 #define STEPPER_TIM_IRQn         TIM7_IRQn
 
-/* ------------------------------------------------------------------
- * 步距角 + 驱动器细分：一圈脉冲数 = 整步步数 × 细分
- *   STEPPER_ANGLE_18 -> 1.8°/步，整步 200 步/圈（Emm42 屏幕上"电机类型"也选 1.8°）
- *   STEPPER_ANGLE_09 -> 0.9°/步，整步 400 步/圈（Emm42 屏幕上"电机类型"也选 0.9°）
- * ------------------------------------------------------------------ */
+/* ==================================================================
+ * 【只改这一行】电机是 1.8° 还是 0.9°
+ *
+ *   STEPPER_MOTOR_18 -> 1.8°/步，200 步/圈，默认细分 256 -> 51200 脉冲/圈
+ *   STEPPER_MOTOR_09 -> 0.9°/步，400 步/圈，默认细分 128 -> 51200 脉冲/圈
+ *
+ * 步距角、细分、一圈脉冲数、演示速度都会自动跟着变，别的宏不用动。
+ * （0.9° 默认用 128 细分而不是 256：一圈脉冲数仍是 51200，
+ *   同样转速下脉冲频率不会翻倍，超过驱动器/TIM7 的处理能力。）
+ * ================================================================== */
+#define STEPPER_MOTOR_18   0
+#define STEPPER_MOTOR_09   1
+
+#define STEPPER_MOTOR      STEPPER_MOTOR_18   /* <<<<<< 切换电机只改这里 >>>>>> */
+
+/* 内部用的步距角编号（由 STEPPER_MOTOR 推导） */
 #define STEPPER_ANGLE_18   0
 #define STEPPER_ANGLE_09   1
-/* 本工程用的电机：1.8°/步（200 步/圈） */
-#define STEPPER_STEP_ANGLE STEPPER_ANGLE_18
 
-/* 驱动器细分：填 Emm42 屏幕上"细分"那个值，1 = 整步（不分细分）。
- *   本工程用的 Emm42 屏幕细分 = 256 -> 1.8° 电机一圈 = 200 × 256 = 51200 个脉冲。
- *   这里不填 256 的话，stepper_move_deg(360) 只发 200 个脉冲，
- *   电机只转 200/(200×256) 圈 = 1.4°，看起来就是"每次只动一点点"。
- *   细分越大，同样转速需要越高的脉冲频率（脉冲频率 = 细分 × 步频，Emm42 上限约 120kHz）。 */
-#define STEPPER_MICROSTEP  256u
-
-#if (STEPPER_STEP_ANGLE == STEPPER_ANGLE_09)
-#define STEPPER_STEPS_PER_REV_FULL 400u   /* 0.9°：360 / 0.9 */
+#if (STEPPER_MOTOR == STEPPER_MOTOR_09)
+#define STEPPER_STEP_ANGLE         STEPPER_ANGLE_09
+#define STEPPER_MICROSTEP          128u   /* 0.9°：400 × 128 = 51200 脉冲/圈 */
+#define STEPPER_STEPS_PER_REV_FULL 400u
 #else
-#define STEPPER_STEPS_PER_REV_FULL 200u   /* 1.8°：360 / 1.8 */
+#define STEPPER_STEP_ANGLE         STEPPER_ANGLE_18
+#define STEPPER_MICROSTEP          256u   /* 1.8°：200 × 256 = 51200 脉冲/圈 */
+#define STEPPER_STEPS_PER_REV_FULL 200u
 #endif
 
 /* 一圈实际需要的脉冲数（含细分） */
 #define STEPPER_STEPS_PER_REV ((uint32_t)STEPPER_STEPS_PER_REV_FULL * STEPPER_MICROSTEP)
 
+/* 一圈转多少毫秒（500 = 2 圈/秒）；脉冲频率自动按"脉冲数/毫秒"算出来 */
+#define STEPPER_REV_MS     1000u
+#if (STEPPER_REV_MS == 0u)
+#error "STEPPER_REV_MS 不能为 0"
+#endif
+#define STEPPER_SPEED_SPS  ((uint32_t)(STEPPER_STEPS_PER_REV * 1000u / STEPPER_REV_MS))
+
 /* 方向参数：stepper_run(STEPPER_DIR_CW) 比 stepper_run(1) 好读 */
 #define STEPPER_DIR_CW    1
 #define STEPPER_DIR_CCW   0
 
-/* 步频（步/秒）范围与默认值；太快电机带不动会丢步，太慢会共振
- * 上限 60000 是给高细分留的余量：脉冲半周期 = 500000/步频 us，
- * 60000 步/秒 -> 8us 半周期，仍在驱动器输入能力（~120kHz）和 5us 下限之间 */
+/* 步频（脉冲/秒）范围：半周期 = 500000/步频 us，
+ * 上限 100000（半周期 5us）是脉冲宽度下限，也低于 Emm42 的 ~120kHz 上限 */
 #define STEPPER_SPS_MIN       10u
-#define STEPPER_SPS_MAX       60000u
-#define STEPPER_DEFAULT_SPS   400u
+#define STEPPER_SPS_MAX       100000u
+#define STEPPER_DEFAULT_SPS   STEPPER_SPEED_SPS   /* 由电机/细分/圈时间自动算 */
 
 /* 初始化 PE12/PE13/PE14 为推挽输出 + TIM7 时基与更新中断；初始化完电机是"失能、不转" */
 void stepper_init(void);
@@ -94,10 +106,10 @@ void stepper_enable(uint8_t on);
 void stepper_set_dir(uint8_t dir);
 
 /* 设置步频（步/秒），会自动限制在 STEPPER_SPS_MIN ~ STEPPER_SPS_MAX；运行中也能改 */
-void stepper_set_speed(uint16_t steps_per_sec);
+void stepper_set_speed(uint32_t steps_per_sec);
 
 /* 读当前步频 */
-uint16_t stepper_get_speed(void);
+uint32_t stepper_get_speed(void);
 
 /* 按当前方向走 steps 步（非阻塞：立刻返回，脉冲由中断发完） */
 void stepper_move_steps(uint32_t steps);

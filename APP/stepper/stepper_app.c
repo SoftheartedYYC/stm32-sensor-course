@@ -22,7 +22,7 @@ static volatile uint8_t  s_busy = 0;        /* 1 = 正在发脉冲 */
 static volatile uint8_t  s_stp_level = 0;   /* 当前 STP 电平 */
 static volatile uint8_t  s_continuous = 0;  /* 1 = 连续转，不数步数 */
 static volatile uint32_t s_remain = 0;      /* 还剩多少步（定长模式） */
-static volatile uint16_t s_sps = STEPPER_DEFAULT_SPS;
+static volatile uint32_t s_sps = STEPPER_DEFAULT_SPS;
 
 /* ---------------------------------------------------------------- 引脚 */
 
@@ -89,7 +89,7 @@ static void stepper_apply_dir(uint8_t dir)
 /* ---------------------------------------------------------------- 定时器 */
 
 /* 步频 -> 半个周期的微秒数（限制在 5us ~ 65535us，太窄驱动器认不到脉冲） */
-static uint16_t stepper_half_us(uint16_t sps)
+static uint16_t stepper_half_us(uint32_t sps)
 {
     uint32_t half;
 
@@ -210,7 +210,7 @@ void stepper_set_dir(uint8_t dir)
 /**
  * @brief  设置步频（步/秒）；会限制在 STEPPER_SPS_MIN ~ STEPPER_SPS_MAX，运行中也能改
  */
-void stepper_set_speed(uint16_t steps_per_sec)
+void stepper_set_speed(uint32_t steps_per_sec)
 {
     if (steps_per_sec < STEPPER_SPS_MIN)
     {
@@ -232,7 +232,7 @@ void stepper_set_speed(uint16_t steps_per_sec)
 /**
  * @brief  读当前步频（步/秒）
  */
-uint16_t stepper_get_speed(void)
+uint32_t stepper_get_speed(void)
 {
     return s_sps;
 }
