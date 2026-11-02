@@ -61,7 +61,7 @@
 #define STEPPER_MOTOR_18   0
 #define STEPPER_MOTOR_09   1
 
-#define STEPPER_MOTOR      STEPPER_MOTOR_09   /* <<<<<< 切换电机只改这里 >>>>>> */
+#define STEPPER_MOTOR      STEPPER_MOTOR_18   /* <<<<<< 切换电机只改这里 >>>>>> */
 
 /* 内部用的步距角编号（由 STEPPER_MOTOR 推导） */
 #define STEPPER_ANGLE_18   0
