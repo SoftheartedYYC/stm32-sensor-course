@@ -61,7 +61,7 @@
 #define STEPPER_MOTOR_18   0
 #define STEPPER_MOTOR_09   1
 
-#define STEPPER_MOTOR      STEPPER_MOTOR_09   /* <<<<<< 切换电机只改这里 >>>>>> */
+#define STEPPER_MOTOR      STEPPER_MOTOR_18   /* <<<<<< 切换电机只改这里 >>>>>> */
 
 /* 内部用的步距角编号（由 STEPPER_MOTOR 推导） */
 #define STEPPER_ANGLE_18   0
@@ -79,7 +79,7 @@
 
 /* 想强制一个细分值就填这里（0 = 用上面的自动值）。
  * 例：0.9° 想试 128 细分，就填 128u；试完不行改回 0u。 */
-#define STEPPER_MICROSTEP_OVERRIDE 128u
+#define STEPPER_MICROSTEP_OVERRIDE 0u
 
 #if (STEPPER_MICROSTEP_OVERRIDE > 0u)
 #define STEPPER_MICROSTEP          STEPPER_MICROSTEP_OVERRIDE
