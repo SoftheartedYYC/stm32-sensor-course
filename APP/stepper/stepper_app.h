@@ -58,11 +58,11 @@
 #define STEPPER_STEP_ANGLE STEPPER_ANGLE_18
 
 /* 驱动器细分：填 Emm42 屏幕上"细分"那个值，1 = 整步（不分细分）。
- *   本工程用的 Emm42 屏幕细分 = 16 -> 1.8° 电机一圈 = 200 × 16 = 3200 个脉冲。
- *   这里不填 16 的话，stepper_move_deg(360) 只发 200 个脉冲，
- *   电机只转 200/(200×16) 圈 = 22.5°，看起来就是"每次只动一点点"。
- *   细分越大，同样转速需要越高的脉冲频率（细分 × 步频 ≲ 100kHz）。 */
-#define STEPPER_MICROSTEP  16u
+ *   本工程用的 Emm42 屏幕细分 = 256 -> 1.8° 电机一圈 = 200 × 256 = 51200 个脉冲。
+ *   这里不填 256 的话，stepper_move_deg(360) 只发 200 个脉冲，
+ *   电机只转 200/(200×256) 圈 = 1.4°，看起来就是"每次只动一点点"。
+ *   细分越大，同样转速需要越高的脉冲频率（脉冲频率 = 细分 × 步频，Emm42 上限约 120kHz）。 */
+#define STEPPER_MICROSTEP  256u
 
 #if (STEPPER_STEP_ANGLE == STEPPER_ANGLE_09)
 #define STEPPER_STEPS_PER_REV_FULL 400u   /* 0.9°：360 / 0.9 */
@@ -77,9 +77,11 @@
 #define STEPPER_DIR_CW    1
 #define STEPPER_DIR_CCW   0
 
-/* 步频（步/秒）范围与默认值；太快电机带不动会丢步，太慢会共振 */
+/* 步频（步/秒）范围与默认值；太快电机带不动会丢步，太慢会共振
+ * 上限 60000 是给高细分留的余量：脉冲半周期 = 500000/步频 us，
+ * 60000 步/秒 -> 8us 半周期，仍在驱动器输入能力（~120kHz）和 5us 下限之间 */
 #define STEPPER_SPS_MIN       10u
-#define STEPPER_SPS_MAX       20000u
+#define STEPPER_SPS_MAX       60000u
 #define STEPPER_DEFAULT_SPS   400u
 
 /* 初始化 PE12/PE13/PE14 为推挽输出 + TIM7 时基与更新中断；初始化完电机是"失能、不转" */

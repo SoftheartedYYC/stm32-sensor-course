@@ -29,10 +29,11 @@ EN = PE12、STP = PE13、DIR = PE14，推挽输出。**用 TIM7 更新中断翻�
 
 ```c
 #define STEPPER_STEP_ANGLE STEPPER_ANGLE_18   /* 本工程：1.8°/步，200 步/圈 */
-#define STEPPER_MICROSTEP  16u                /* Emm42 屏幕上的"细分"值 */
+#define STEPPER_MICROSTEP  256u               /* Emm42 屏幕上的"细分"值（1~256） */
 ```
 
-> 一圈脉冲数 = 200 × 16 = **3200**；`STEP_DEMO_SPS` 用 3200 就是约 1 秒一圈。
+> 一圈脉冲数 = 200 × 256 = **51200**；`STEP_DEMO_SPS` 用 51200 就是约 1 秒一圈。
+> 脉冲频率 = 51200Hz，低于 Emm42 的 120kHz 上限；步频上限 `STEPPER_SPS_MAX` 已放到 60000。
 
 一圈需要的脉冲数 = 整步步数 × 细分：
 
