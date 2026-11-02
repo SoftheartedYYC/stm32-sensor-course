@@ -24,6 +24,10 @@ JLinkSettings.ini
 *.uvguix.*
 *.uvoptx
 
+# ---- 本地工具/可执行文件 ----
+*.exe
+.workbuddy/
+
 # ---- 系统与编辑器 ----
 Thumbs.db
 desktop.ini

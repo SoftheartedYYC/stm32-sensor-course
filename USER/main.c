@@ -31,7 +31,7 @@ int main(void)
     KeyIRQ_Init();    /* PE0~PE3 外部中断 */
     MatrixIRQ_Init(); /* PF0~PF7 矩阵扫描 */
     BuzzerIRQ_Init(); /* PB10 蜂鸣器 */
-    relay_init();     /* PC0 / PC1 */
+    relay_init();     /* PC0 / PC1 / PC2，初始化完三路都是"释放" */
     rgb_init();       /* PC6~PC8 PWM */
 #if TEMP_SENSOR_DHT11
     dht11_init();     /* PB11 DHT11 */

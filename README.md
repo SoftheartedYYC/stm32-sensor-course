@@ -15,11 +15,7 @@
 | 矩阵键盘（中断版） | [APP/interrupt](APP/interrupt/README.md) | `matrix_irq.h` | PF0~PF7 | TIM6 每 1ms 扫一行 |
 | 蜂鸣器 | [APP/buzzer](APP/buzzer/README.md) | `buzzer_app.h` | PB10 | 有源/无源靠宏切换，软件翻转方波（轮询版） |
 | 蜂鸣器（中断版） | [APP/interrupt](APP/interrupt/README.md) | `buzzer_irq.h` | PB10 | TIM2 更新中断，连续发声、不占主循环 |
-
-> 蜂鸣器有两种驱动（轮询版 `APP/buzzer`、中断版 `APP/interrupt`），共用一份配置
-> [`APP/buzzer/buzzer_cfg.h`](APP/buzzer/buzzer_cfg.h)：改里面的 `BUZZER_TYPE` 宏就能在
-> **有源低电平触发 / 有源高电平触发 / 无源（要方波）** 之间切换，两个驱动和业务代码都不用动。
-| 继电器 | [APP/relay](APP/relay/README.md) | `relay_app.h` | PC0 / PC1 | 高电平吸合 |
+| 继电器 | [APP/relay](APP/relay/README.md) | `relay_app.h` | PC0 / PC1 / PC2 | 三路，高电平吸合 |
 | RGB 灯 | [APP/rgb](APP/rgb/README.md) | `rgb_app.h` | PC6~PC8 | TIM3 PWM，共阳 |
 | 数码管 | [APP/smg](APP/smg/README.md) | `smg.h` | PD0~PD7 / PG9~PG12 | TIM4 中断扫描 |
 | OLED | [APP/oled](APP/oled/README.md) | `oled_app.h` | PB6 / PB7 | 软件 I2C，128×64 |
@@ -28,6 +24,10 @@
 | DHT11 | [APP/dht11](APP/dht11/README.md) | `dht11_app.h` | PB11 | 温湿度 |
 | DS18B20 | [APP/ds18b20](APP/ds18b20/README.md) | `ds18b20_app.h` | PB11 | 温度，与 DHT11 二选一 |
 | 超声波 HC-SR04 | [APP/hcsr04](APP/hcsr04/README.md) | `hcsr04.h` | PA8 / PB12 | TIM1 输入捕获测距（main.c 暂未使用） |
+
+> 蜂鸣器有两种驱动（轮询版 `APP/buzzer`、中断版 `APP/interrupt`），共用一份配置
+> [`APP/buzzer/buzzer_cfg.h`](APP/buzzer/buzzer_cfg.h)：改里面的 `BUZZER_TYPE` 宏就能在
+> **有源低电平触发 / 有源高电平触发 / 无源（要方波）** 之间切换，两个驱动和业务代码都不用动。
 
 函数、宏、示例和注意事项都在各自文件夹的 `README.md` 里；
 引脚全表见 [IO分配表.md](IO分配表.md)，各模块的初始化都在 [USER/main.c](USER/main.c)；
