@@ -16,6 +16,7 @@
 | 蜂鸣器 | [APP/buzzer](APP/buzzer/README.md) | `buzzer_app.h` | PB10 | 有源/无源靠宏切换，软件翻转方波（轮询版） |
 | 蜂鸣器（中断版） | [APP/interrupt](APP/interrupt/README.md) | `buzzer_irq.h` | PB10 | TIM2 更新中断，连续发声、不占主循环 |
 | 继电器 | [APP/relay](APP/relay/README.md) | `relay_app.h` | PC0 / PC1 / PC2 | 三路，高电平吸合 |
+| 步进电机 | [APP/stepper](APP/stepper/README.md) | `stepper_app.h` | PE12 / PE13 / PE14 | TIM7 中断发脉冲，0.9°/1.8° 宏切换 |
 | RGB 灯 | [APP/rgb](APP/rgb/README.md) | `rgb_app.h` | PC6~PC8 | TIM3 PWM，共阳 |
 | 数码管 | [APP/smg](APP/smg/README.md) | `smg.h` | PD0~PD7 / PG9~PG12 | TIM4 中断扫描 |
 | OLED | [APP/oled](APP/oled/README.md) | `oled_app.h` | PB6 / PB7 | 软件 I2C，128×64 |
@@ -83,6 +84,7 @@ int main(void)
 | TIM2 | 中断版蜂鸣器 | 无源：每 185µs 更新中断翻转 PB10；有源：1ms 一拍只数发声时长；`TIM2_IRQHandler` 在 `buzzer_irq.c` |
 | TIM1 | 超声波输入捕获 | CH1（PA8）；`TIM1_CC_IRQHandler` 在 `hcsr04.c` |
 | TIM6 | 1ms 时基 | 按键消抖、矩阵扫描共用；`TIM6_IRQHandler` 在 `tick_irq.c` |
+| TIM7 | 步进电机脉冲 | 每半个周期更新中断翻转 PE13；`TIM7_IRQHandler` 在 `stepper_app.c` |
 | EXTI0~3 | 独立按键 | PE0~PE3 双边沿；`EXTI0~3_IRQHandler` 在 `key_irq.c` |
 | PB10 | 蜂鸣器 | 类型在 `buzzer_cfg.h` 选；有源只给电平，无源才发方波 |
 

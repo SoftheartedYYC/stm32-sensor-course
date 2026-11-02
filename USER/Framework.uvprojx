@@ -366,7 +366,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\APP\bh1750;..\APP\buzzer;..\APP\dht11;..\APP\ds18b20;..\APP\key;..\APP\led;..\APP\matrixkey;..\APP\oled;..\APP\photo;..\APP\relay;..\APP\rgb;..\APP\smg;..\APP\interrupt;..\APP\hcsr04;..\APP\iic</IncludePath>
+              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\APP\bh1750;..\APP\buzzer;..\APP\dht11;..\APP\ds18b20;..\APP\key;..\APP\led;..\APP\matrixkey;..\APP\oled;..\APP\photo;..\APP\relay;..\APP\stepper;..\APP\rgb;..\APP\smg;..\APP\interrupt;..\APP\hcsr04;..\APP\iic</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -518,6 +518,10 @@
               <FileName>relay_app.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\relay\relay_app.c</FilePath>
+            </File>            <File>
+              <FileName>stepper_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\stepper\stepper_app.c</FilePath>
             </File>
             <File>
               <FileName>rgb_app.c</FileName>

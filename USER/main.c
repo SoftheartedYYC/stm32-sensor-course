@@ -13,6 +13,7 @@
 #include "matrix_irq.h" /* MatrixIRQ_Init */
 #include "buzzer_irq.h" /* BuzzerIRQ_Init */
 #include "relay_app.h" /* relay_init */
+#include "stepper_app.h" /* stepper_init */
 #include "rgb_app.h"   /* rgb_init */
 #include "dht11_app.h"   /* dht11_init */
 #include "ds18b20_app.h" /* ds18b20_init */
@@ -33,6 +34,7 @@ int main(void)
     BuzzerIRQ_Init(); /* PB10 蜂鸣器 */
     relay_init();     /* PC0 / PC1 / PC2，初始化完三路都是"释放" */
     rgb_init();       /* PC6~PC8 PWM */
+    stepper_init();   /* PE12~PE14 步进电机（TIM7 发脉冲，默认不转） */
 #if TEMP_SENSOR_DHT11
     dht11_init();     /* PB11 DHT11 */
 #else
