@@ -28,9 +28,11 @@ EN = PE12、STP = PE13、DIR = PE14，推挽输出。**用 TIM7 更新中断翻�
 ## 步距角 + 驱动器细分（两个宏）
 
 ```c
-#define STEPPER_STEP_ANGLE STEPPER_ANGLE_18   /* 1.8°/步；0.9° 电机改成 STEPPER_ANGLE_09 */
-#define STEPPER_MICROSTEP  1u                 /* 驱动器屏幕上的"细分"值，1 = 整步 */
+#define STEPPER_STEP_ANGLE STEPPER_ANGLE_09   /* 本工程：0.9°/步，400 步/圈 */
+#define STEPPER_MICROSTEP  16u                /* Emm42 屏幕上的"细分"值 */
 ```
+
+> 一圈脉冲数 = 400 × 16 = **6400**；`STEP_DEMO_SPS` 用 6400 就是 1 秒一圈。
 
 一圈需要的脉冲数 = 整步步数 × 细分：
 
