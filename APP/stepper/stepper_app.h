@@ -61,7 +61,7 @@
 #define STEPPER_MOTOR_18   0
 #define STEPPER_MOTOR_09   1
 
-#define STEPPER_MOTOR      STEPPER_MOTOR_18   /* <<<<<< 切换电机只改这里 >>>>>> */
+#define STEPPER_MOTOR      STEPPER_MOTOR_09   /* <<<<<< 切换电机只改这里 >>>>>> */
 
 /* 内部用的步距角编号（由 STEPPER_MOTOR 推导） */
 #define STEPPER_ANGLE_18   0
@@ -69,12 +69,22 @@
 
 #if (STEPPER_MOTOR == STEPPER_MOTOR_09)
 #define STEPPER_STEP_ANGLE         STEPPER_ANGLE_09
-#define STEPPER_MICROSTEP          64u    /* 0.9°：400 × 64 = 25600 脉冲/圈 */
+#define STEPPER_MICROSTEP_AUTO     64u    /* 0.9°：400 × 64 = 25600 脉冲/圈 */
 #define STEPPER_STEPS_PER_REV_FULL 400u
 #else
 #define STEPPER_STEP_ANGLE         STEPPER_ANGLE_18
-#define STEPPER_MICROSTEP          256u   /* 1.8°：200 × 256 = 51200 脉冲/圈 */
+#define STEPPER_MICROSTEP_AUTO     256u   /* 1.8°：200 × 256 = 51200 脉冲/圈 */
 #define STEPPER_STEPS_PER_REV_FULL 200u
+#endif
+
+/* 想强制一个细分值就填这里（0 = 用上面的自动值）。
+ * 例：0.9° 想试 128 细分，就填 128u；试完不行改回 0u。 */
+#define STEPPER_MICROSTEP_OVERRIDE 128u
+
+#if (STEPPER_MICROSTEP_OVERRIDE > 0u)
+#define STEPPER_MICROSTEP          STEPPER_MICROSTEP_OVERRIDE
+#else
+#define STEPPER_MICROSTEP          STEPPER_MICROSTEP_AUTO
 #endif
 
 /* 一圈实际需要的脉冲数（含细分） */
