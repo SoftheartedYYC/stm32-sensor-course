@@ -48,19 +48,27 @@
 #define STEPPER_TIM_IRQn         TIM7_IRQn
 
 /* ------------------------------------------------------------------
- * 步距角：只改这一行
- *   STEPPER_ANGLE_18 -> 1.8°/步，200 步/圈
- *   STEPPER_ANGLE_09 -> 0.9°/步，400 步/圈
+ * 步距角 + 驱动器细分：一圈脉冲数 = 整步步数 × 细分
+ *   STEPPER_ANGLE_18 -> 1.8°/步，整步 200 步/圈（Emm42 屏幕上"电机类型"也选 1.8°）
+ *   STEPPER_ANGLE_09 -> 0.9°/步，整步 400 步/圈（Emm42 屏幕上"电机类型"也选 0.9°）
  * ------------------------------------------------------------------ */
 #define STEPPER_ANGLE_18   0
 #define STEPPER_ANGLE_09   1
 #define STEPPER_STEP_ANGLE STEPPER_ANGLE_18
 
+/* 驱动器细分：填 Emm42 屏幕上"细分"那个值，1 = 整步（不分细分）。
+ *   屏幕上是 16，这里就填 16——否则 stepper_move_deg(360) 只会转 360/16 度。
+ *   细分越大，同样转速需要越高的脉冲频率（细分 × 步频 ≲ 100kHz）。 */
+#define STEPPER_MICROSTEP  1u
+
 #if (STEPPER_STEP_ANGLE == STEPPER_ANGLE_09)
-#define STEPPER_STEPS_PER_REV 400u   /* 0.9°：360 / 0.9 */
+#define STEPPER_STEPS_PER_REV_FULL 400u   /* 0.9°：360 / 0.9 */
 #else
-#define STEPPER_STEPS_PER_REV 200u   /* 1.8°：360 / 1.8 */
+#define STEPPER_STEPS_PER_REV_FULL 200u   /* 1.8°：360 / 1.8 */
 #endif
+
+/* 一圈实际需要的脉冲数（含细分） */
+#define STEPPER_STEPS_PER_REV ((uint32_t)STEPPER_STEPS_PER_REV_FULL * STEPPER_MICROSTEP)
 
 /* 方向参数：stepper_run(STEPPER_DIR_CW) 比 stepper_run(1) 好读 */
 #define STEPPER_DIR_CW    1
@@ -102,6 +110,6 @@ void stepper_stop(void);
 uint8_t stepper_is_busy(void);
 
 /* 一圈多少步（200 或 400），方便自己算角度 */
-uint16_t stepper_steps_per_rev(void);
+uint32_t stepper_steps_per_rev(void);
 
 #endif /* __STEPPER_APP_H */

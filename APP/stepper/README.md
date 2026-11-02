@@ -25,22 +25,29 @@ EN = PE12、STP = PE13、DIR = PE14，推挽输出。**用 TIM7 更新中断翻�
 > 常见模块（TB6600、A4988、DRV8825）的 EN 都是低电平使能；如果手上的板子是“高电平使能”，
 > 把 `STEPPER_EN_ACTIVE_LEVEL` 改成 1。
 
-## 步距角：只改一个宏
+## 步距角 + 驱动器细分（两个宏）
 
 ```c
-#define STEPPER_STEP_ANGLE STEPPER_ANGLE_18   /* 1.8°/步，200 步/圈 */
-// #define STEPPER_STEP_ANGLE STEPPER_ANGLE_09  /* 0.9°/步，400 步/圈 */
+#define STEPPER_STEP_ANGLE STEPPER_ANGLE_18   /* 1.8°/步；0.9° 电机改成 STEPPER_ANGLE_09 */
+#define STEPPER_MICROSTEP  1u                 /* 驱动器屏幕上的"细分"值，1 = 整步 */
 ```
 
-改成 `STEPPER_ANGLE_09` 后：
+一圈需要的脉冲数 = 整步步数 × 细分：
 
-| | 1.8° | 0.9° |
+| | 1.8° 整步 | 0.9° 整步 |
 |---|---|---|
-| 步/圈 | 200 | 400 |
-| `stepper_move_deg(90)` | 50 步 | 100 步 |
-| 400 步/秒时转速 | 2 转/秒 | 1 转/秒 |
+| 整步 200 步/圈 | 200 | 400 |
+| 细分 16（屏幕设 16） | 3200 | 6400 |
+| `stepper_move_deg(90)`（细分 16） | 800 步 | 1600 步 |
+| 400 步/秒、细分 16 时转速 | 0.125 转/秒 | 0.0625 转/秒 |
 
-`stepper_steps_per_rev()` 返回这个值，`stepper_move_deg()` 按它换算。
+**这是最容易踩的坑**：驱动器屏幕上细分不是 1，程序里不改 `STEPPER_MICROSTEP`，
+`stepper_move_deg(360)` 就只会转 360/细分 度。
+
+同理，细分越大、同样步频下转得越慢。想要同样的转速，步频要乘细分倍数：
+整步时 400 步/秒，细分 16 就要 6400 步/秒（仍在 20000 的上限内）。
+
+`stepper_steps_per_rev()` 返回"一圈脉冲数"（含细分），`stepper_move_deg()` 按它换算。
 
 ## 定时器参数
 
@@ -94,6 +101,34 @@ delay_ms(2000);
 stepper_stop();
 stepper_enable(0);             /* 松开电机（失能后线圈没电流，可以手转） */
 ```
+
+## 配 Emm42 / 张大头这类闭环驱动器（本文电机）
+
+资料：<https://blog.csdn.net/zhangdatou666/article/details/128320222>（Emm42_V4.2 说明书）
+
+| 驱动器参数 | 值 | 本驱动对应 |
+|---|---|---|
+| 供电 | **7~28V**（别用 5V），和 MCU 共地 | 外部电源 |
+| 信号电平 | 3.3~24V，支持共阳/共阴 | 3.3V 直接接 |
+| 最大脉冲频率 | 约 120kHz | `STEPPER_SPS_MAX` 20000 步/秒，远低于上限 |
+| 细分 | 1~256 任意 | `STEPPER_MICROSTEP` |
+| 电机类型 | 0.9° / 1.8° 可选（默认 1.8°） | `STEPPER_STEP_ANGLE` |
+
+接线方式决定极性，二选一：
+
+| 接法 | 怎么接 | EN 极性 |
+|---|---|---|
+| **共阳**（和默认一致） | PUL+/DIR+/ENA+ 接 +5V，PUL-/DIR-/ENA- 接单片机 | 低电平使能：`STEPPER_EN_ACTIVE_LEVEL 0` |
+| **共阴** | PUL+/DIR+/ENA+ 接单片机，PUL-/DIR-/ENA- 接 GND | 高电平使能：改成 `1` |
+
+方向（DIR）和接法/电机安装方向有关：上电转的方向不对，就把 `STEPPER_DIR_CW_LEVEL` 取反（0/1 互换），不用改接线。
+
+屏幕上还要确认（驱动板自带屏幕，按 SET 改）：
+
+- 控制模式 = **脉冲 / Dir-Step**（不是串口/CAN）；
+- 细分 = 1~16（和 `STEPPER_MICROSTEP` 一致）；
+- 电机类型 = 0.9° 或 1.8°（和 `STEPPER_STEP_ANGLE` 一致）；
+- 电流按电机额定值设（常见 1.5~2A），太大电机发烫、太小力矩不够。
 
 ## 注意
 

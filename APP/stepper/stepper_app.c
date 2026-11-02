@@ -310,7 +310,7 @@ uint8_t stepper_is_busy(void)
 /**
  * @brief  一圈多少步：1.8° -> 200，0.9° -> 400
  */
-uint16_t stepper_steps_per_rev(void)
+uint32_t stepper_steps_per_rev(void)
 {
     return STEPPER_STEPS_PER_REV;
 }
