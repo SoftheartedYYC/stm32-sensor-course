@@ -518,7 +518,8 @@
               <FileName>relay_app.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\relay\relay_app.c</FilePath>
-            </File>            <File>
+            </File>
+            <File>
               <FileName>stepper_app.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\stepper\stepper_app.c</FilePath>

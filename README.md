@@ -1,7 +1,7 @@
 # 传感器程序集合（STM32F103ZET6）
 
 课程实验工程：`APP/` 下每个模块一个文件夹、一份 README（`interrupt/` 放中断版驱动）；
-`USER/main.c` 按顺序初始化各模块，后续要用的功能直接写在 `main.c` 的 `while(1)` 里。
+`USER/main.h` 里的 `Board_Init()` 按顺序初始化各模块，后续要用的功能直接写在 `main.c` 的 `while(1)` 里。
 
 ## 模块一览
 
@@ -31,7 +31,7 @@
 > **有源低电平触发 / 有源高电平触发 / 无源（要方波）** 之间切换，两个驱动和业务代码都不用动。
 
 函数、宏、示例和注意事项都在各自文件夹的 `README.md` 里；
-引脚全表见 [IO分配表.md](IO分配表.md)，各模块的初始化都在 [USER/main.c](USER/main.c)；
+引脚全表见 [IO分配表.md](IO分配表.md)，各模块的初始化都在 [USER/main.h](USER/main.h) 的 `Board_Init()`；
 配置宏和后续自己的定义写在 [USER/main.h](USER/main.h)。
 
 ## 目录结构
