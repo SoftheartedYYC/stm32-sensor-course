@@ -51,16 +51,17 @@
  * 【只改这一行】电机是 1.8° 还是 0.9°
  *
  *   STEPPER_MOTOR_18 -> 1.8°/步，200 步/圈，默认细分 256 -> 51200 脉冲/圈
- *   STEPPER_MOTOR_09 -> 0.9°/步，400 步/圈，默认细分 128 -> 51200 脉冲/圈
+ *   STEPPER_MOTOR_09 -> 0.9°/步，400 步/圈，默认细分 64  -> 25600 脉冲/圈
  *
  * 步距角、细分、一圈脉冲数、演示速度都会自动跟着变，别的宏不用动。
- * （0.9° 默认用 128 细分而不是 256：一圈脉冲数仍是 51200，
- *   同样转速下脉冲频率不会翻倍，超过驱动器/TIM7 的处理能力。）
+ * （0.9° 默认用 64 而不是 128/256：Emm42 在 0.9° + 高细分下闭环容易振荡，
+ *   电流一冲就报欠压/保护；64 细分一圈 25600 脉冲，25.6kHz，稳得多。
+ *   如果 64 还抖，再降到 32 或 16；想更细可以往上试，但别超过 128。）
  * ================================================================== */
 #define STEPPER_MOTOR_18   0
 #define STEPPER_MOTOR_09   1
 
-#define STEPPER_MOTOR      STEPPER_MOTOR_18   /* <<<<<< 切换电机只改这里 >>>>>> */
+#define STEPPER_MOTOR      STEPPER_MOTOR_09   /* <<<<<< 切换电机只改这里 >>>>>> */
 
 /* 内部用的步距角编号（由 STEPPER_MOTOR 推导） */
 #define STEPPER_ANGLE_18   0
@@ -68,7 +69,7 @@
 
 #if (STEPPER_MOTOR == STEPPER_MOTOR_09)
 #define STEPPER_STEP_ANGLE         STEPPER_ANGLE_09
-#define STEPPER_MICROSTEP          128u   /* 0.9°：400 × 128 = 51200 脉冲/圈 */
+#define STEPPER_MICROSTEP          64u    /* 0.9°：400 × 64 = 25600 脉冲/圈 */
 #define STEPPER_STEPS_PER_REV_FULL 400u
 #else
 #define STEPPER_STEP_ANGLE         STEPPER_ANGLE_18
