@@ -54,8 +54,8 @@
  * ------------------------------------------------------------------ */
 #define STEPPER_ANGLE_18   0
 #define STEPPER_ANGLE_09   1
-/* 本工程用的电机：0.9°/步（400 步/圈） */
-#define STEPPER_STEP_ANGLE STEPPER_ANGLE_09
+/* 本工程用的电机：1.8°/步（200 步/圈） */
+#define STEPPER_STEP_ANGLE STEPPER_ANGLE_18
 
 /* 驱动器细分：填 Emm42 屏幕上"细分"那个值，1 = 整步（不分细分）。
  *   本工程用的 Emm42 屏幕细分 = 16 -> 1.8° 电机一圈 = 200 × 16 = 3200 个脉冲。
