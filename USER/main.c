@@ -17,6 +17,14 @@
  * 注意这是"脉冲数/秒"，不是"整步/秒" */
 #define STEP_DEMO_SPS   3200u
 
+/* 每圈补偿的脉冲数：1.8°/16 细分时 1 个脉冲 = 0.1125°。
+ *   实测"每转一圈都少 0.1°"（显示 359.9）时改成 1 试试；
+ *   如果只是偶尔差、或者两圈误差不翻倍，就别动它（多半是屏幕 0.1° 分辨率/闭环还在收敛）。 */
+#define STEP_TURN_TRIM  0
+
+/* 一圈实际发多少个脉冲 = 理论值 + 补偿 */
+#define STEP_TURN_PULSES (STEPPER_STEPS_PER_REV + (uint32_t)STEP_TURN_TRIM)
+
 /**
  * @brief  每秒一次的采样（由 main.h 里的软定时器置标志）
  * @note   主循环空闲时、以及"等电机转完"的间隙都会调用，保证转电机时不丢采样
@@ -53,10 +61,12 @@ int main(void)
     /* 步进电机：先设速度再使能（失能状态下设置也生效，这里只是顺序好看） */
     stepper_set_speed(STEP_DEMO_SPS);
     stepper_enable(1);
+    delay_ms(200);              /* 给驱动器使能留点时间，别把第一个脉冲吞掉 */
 
     /* ---- 只转一圈（360°）就停 ---- */
-    stepper_move_deg(360);      /* 1.8° + 细分 16 -> 200 x 16 = 3200 个脉冲 */
+    stepper_move_steps(STEP_TURN_PULSES); /* 3200 个脉冲（+STEP_TURN_TRIM 补偿） */
     wait_stepper_done();        /* 等它转完，期间照常处理采样 */
+    delay_ms(300);              /* 停一下，等闭环把最后一点误差收敛，再看屏幕 */
 
     /* 转完停在这里：EN 保持使能，电机锁在 360° 的位置（用手转不动）。
      * 想松开电机就调 stepper_enable(0)；想再转一圈就在下面 while 里重新调用
