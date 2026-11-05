@@ -366,7 +366,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\APP\bh1750;..\APP\buzzer;..\APP\dht11;..\APP\ds18b20;..\APP\key;..\APP\led;..\APP\matrixkey;..\APP\oled;..\APP\photo;..\APP\relay;..\APP\stepper;..\APP\rgb;..\APP\smg;..\APP\interrupt;..\APP\hcsr04;..\APP\iic</IncludePath>
+              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\APP\bh1750;..\APP\buzzer;..\APP\dht11;..\APP\ds18b20;..\APP\key;..\APP\led;..\APP\matrixkey;..\APP\oled;..\APP\photo;..\APP\relay;..\APP\stepper;..\APP\rgb;..\APP\smg;..\APP\interrupt;..\APP\hcsr04;..\APP\iic;..\APP\mpu6050</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -538,6 +538,16 @@
               <FileName>smg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\smg\smg.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\mpu6050\mpu6050.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050_ui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\mpu6050\mpu6050_ui.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -21,6 +21,7 @@
 | 数码管 | [APP/smg](APP/smg/README.md) | `smg.h` | PD0~PD7 / PG9~PG12 | TIM4 中断扫描 |
 | OLED | [APP/oled](APP/oled/README.md) | `oled_app.h` | PB6 / PB7 | 软件 I2C，128×64 |
 | 照度 BH1750 | [APP/bh1750](APP/bh1750/README.md) | `bh1750.h` | PB6 / PB7 | 与 OLED 共用总线 |
+| 六轴 MPU6050 | [APP/mpu6050](APP/mpu6050/README.md) | `mpu6050.h` | PB6 / PB7 / PB8 / PB9 | 加速度 + 陀螺 + 温度，屏显用 `mpu6050_ui.h` |
 | 软件 I2C | [APP/iic](APP/iic/README.md) | `iic.h` | PB6 / PB7 | 总线空闲检测、地址探测、总线恢复 |
 | DHT11 | [APP/dht11](APP/dht11/README.md) | `dht11_app.h` | PB11 | 温湿度 |
 | DS18B20 | [APP/ds18b20](APP/ds18b20/README.md) | `ds18b20_app.h` | PB11 | 温度，与 DHT11 二选一 |
@@ -78,6 +79,7 @@ int main(void)
 | 资源 | 谁用 | 注意 |
 |---|---|---|
 | PB6 / PB7 | OLED + BH1750 软件 I2C | 先 `oled_init()` 再 `BH1750_Init()`；总线探测/恢复用 `APP/iic` |
+| PB6 / PB7 / PB8 / PB9 | MPU6050 | SDA/SCL 与 OLED 共用；INT=PB8（可不接）、AD0=PB9（驱动拉低 → 0x68） |
 | PB11 | DHT11 / DS18B20 | 物理上二选一，只调一个 `_init()` |
 | TIM3 | RGB PWM | 别在别处初始化 TIM3 |
 | TIM4 | 数码管扫描 | 别在别处初始化 TIM4；`TIM4_IRQHandler` 在 `smg.c` |
